@@ -6,9 +6,6 @@
   "compatibility_flags": [
     "python_workers"
   ],
-  "ai": {
-    "binding": "AI"
-  },
   "kv_namespaces": [
     {
       "binding": "QUOTA_KV"
