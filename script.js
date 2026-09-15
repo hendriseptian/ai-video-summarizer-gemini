@@ -19,7 +19,7 @@ function isValidYouTubeUrl(value) {
 }
 
 const API_URL =
-    "https://ai-video-summarizer.hendriseptian25.workers.dev/analyze";
+    "https://ai-video-summarizer-gemini.hendriseptian25.workers.dev/analyze";
 
 let currentData = null;
 let currentAIRoot = null;
