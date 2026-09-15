@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>AI Video Summarizer</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<div class="app-shell">
+
+
+    <!-- ======================================================
+         HEADER
+         ====================================================== -->
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="eyebrow">
+                AI VIDEO SUMMARIZER
+            </div>
+
+            <h1>
+                AI Video Summarizer
+            </h1>
+
+            <p>
+                Analyze and summarize online videos with AI
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <!-- ======================================================
+         MAIN
+         ====================================================== -->
+
+    <main>
+
+
+        <!-- ==================================================
+             INPUT
+             ================================================== -->
+
+        <section class="input-card">
+
+            <label for="videoUrl">
+                YouTube Video URL
+            </label>
+
+
+            <div class="input-row">
+
+                <input
+                    type="text"
+                    id="videoUrl"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    autocomplete="off"
+                >
+
+
+                <button
+                    id="analyzeButton"
+                    class="primary-btn"
+                    type="button"
+                >
+                    ANALYZE
+                </button>
+
+            </div>
+
+
+            <div
+                id="status"
+                class="status-box"
+            ></div>
+
+        </section>
+
+
+        <!-- ==================================================
+             VIDEO INFORMATION
+             ================================================== -->
+
+        <section class="video-card">
+
+            <h2 class="section-title">
+                Video Information
+            </h2>
+
+
+            <div
+                id="videoInfo"
+                class="video-info"
+            >
+
+                <div class="empty-state">
+                    No video analyzed yet.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==================================================
+             AI RESULT
+             ================================================== -->
+
+        <section
+            id="aiResult"
+            aria-live="polite"
+        ></section>
+
+
+        <!-- ==================================================
+             TRANSCRIPT
+             ================================================== -->
+
+        <section class="transcript-card">
+
+            <h2>
+                Transcript
+            </h2>
+
+
+            <div id="transcript">
+
+                <div class="empty-state">
+                    Transcript will appear here.
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- ======================================================
+         FOOTER
+         ====================================================== -->
+
+    <footer>
+
+        <p>
+            AI Video Summarizer — V2
+        </p>
+
+    </footer>
+
+
+</div>
+
+
+<!-- ==========================================================
+     PDF LIBRARY
+     ========================================================== -->
+
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+</script>
+
+
+<!-- ==========================================================
+     APPLICATION SCRIPT
+     ========================================================== -->
+
+<script src="script.js"></script>
+
+
+</body>
+
+</html>

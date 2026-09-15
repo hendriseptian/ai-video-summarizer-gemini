@@ -1,1 +1,1 @@
-# ai-video-summarizer-gemini
+# ai-video-summarizer

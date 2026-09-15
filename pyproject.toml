@@ -1,0 +1,16 @@
+[project]
+name = "ai-video-summarizer-api"
+version = "0.1.0"
+description = "AI Video Summarizer API"
+requires-python = ">=3.13"
+
+dependencies = [
+    "fastapi",
+    "httpx2"
+]
+
+[dependency-groups]
+dev = [
+    "workers-py",
+    "workers-runtime-sdk"
+]
