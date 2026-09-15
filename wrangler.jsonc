@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ai-video-summarizer",
+  "name": "ai-video-summarizer-gemini",
   "main": "src/main.py",
   "compatibility_date": "2026-09-15",
   "compatibility_flags": [
