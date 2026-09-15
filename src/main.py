@@ -1892,92 +1892,148 @@ async def run_ai(
     max_tokens=AI_MAX_TOKENS
 ):
     """
-    Stable Workers AI runner with an automatic daily quota guard.
+    Gemini AI runner.
 
-    Free Workers AI quota resets at 00:00 UTC. When Cloudflare returns
-    a quota/account-limit error, the guard blocks further AI calls for
-    the current UTC date. The guard is automatically cleared on the next
-    UTC date, so the first request after reset can try Workers AI again.
-
-    Quota errors do NOT trigger the fallback model because both models
-    consume the same account-level Workers AI allocation. This avoids
-    wasting additional requests when the account is quota-limited.
+    Replaces Cloudflare Workers AI while preserving
+    the existing application interface.
     """
 
-    await refresh_quota_guard()
+    gemini_api_key = getattr(env, "GEMINI_API_KEY", None)
 
-    if await is_quota_guard_blocked():
-        raise AIQuotaError(
-            "Workers AI daily free quota is currently unavailable. "
-            "Automatic retry is enabled after the Cloudflare daily reset "
-            "at " + quota_reset_iso() + "."
+    if not gemini_api_key:
+        raise RuntimeError(
+            "GEMINI_API_KEY secret is not configured in Cloudflare."
         )
 
+    model = "gemini-3.5-flash-lite"
+
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/"
+        "models/"
+        + model
+        + ":generateContent"
+    )
+
     payload = {
-        "messages": [
-            {
-                "role": "system",
-                "content": system_prompt
-            },
+        "systemInstruction": {
+            "parts": [
+                {
+                    "text": system_prompt
+                }
+            ]
+        },
+        "contents": [
             {
                 "role": "user",
-                "content": user_prompt
+                "parts": [
+                    {
+                        "text": user_prompt
+                    }
+                ]
             }
         ],
-        "temperature": 0.0,
-        "max_tokens": max_tokens
+        "generationConfig": {
+            "maxOutputTokens": max_tokens
+        }
     }
 
-    models = [
-        AI_MODEL,
-        AI_FALLBACK_MODEL
-    ]
+    headers = {
+        "x-goog-api-key": gemini_api_key,
+        "Content-Type": "application/json"
+    }
 
     errors = []
 
-    for model in models:
+    for attempt in range(AI_RETRIES + 1):
 
-        if not model:
-            continue
+        try:
+            async with httpx.AsyncClient(
+                timeout=AI_TIMEOUT,
+                follow_redirects=True
+            ) as client:
 
-        for attempt in range(AI_RETRIES + 1):
-
-            try:
-                return await env.AI.run(
-                    model,
-                    payload
+                response = await client.post(
+                    url,
+                    headers=headers,
+                    json=payload
                 )
 
-            except Exception as error:
+            if response.status_code >= 400:
 
-                message = str(error)
+                try:
+                    error_data = response.json()
+                except Exception:
+                    error_data = response.text
 
-                errors.append(
-                    model
-                    + " -> "
-                    + message
+                message = (
+                    "Gemini API HTTP "
+                    + str(response.status_code)
+                    + ": "
+                    + str(error_data)
                 )
 
-                if is_ai_quota_error(message):
-                    await set_quota_guard_block(model, message)
-
-                    raise AIQuotaError(
-                        "Workers AI daily free quota is currently unavailable. "
-                        "Cloudflare returned a quota/account-limit error. "
-                        "Automatic retry is enabled after the daily reset at "
-                        + quota_reset_iso()
-                        + "."
-                    )
+                errors.append(message)
 
                 if attempt < AI_RETRIES:
                     await asyncio.sleep(
                         0.8 * (attempt + 1)
                     )
+                    continue
 
-    raise RuntimeError(
-        "AI model request failed. "
-        + " | ".join(errors)
-    )
+                raise RuntimeError(message)
+
+            data = response.json()
+
+            candidates = data.get("candidates", [])
+
+            if not candidates:
+                raise RuntimeError(
+                    "Gemini API returned no candidates: "
+                    + str(data)
+                )
+
+            content = candidates[0].get(
+                "content",
+                {}
+            )
+
+            parts = content.get(
+                "parts",
+                []
+            )
+
+            text_parts = []
+
+            for part in parts:
+                text = part.get("text")
+
+                if isinstance(text, str) and text:
+                    text_parts.append(text)
+
+            result = "\n".join(text_parts).strip()
+
+            if not result:
+                raise RuntimeError(
+                    "Gemini API returned empty text."
+                )
+
+            return result
+
+        except Exception as error:
+
+            message = str(error)
+
+            errors.append(message)
+
+            if attempt < AI_RETRIES:
+                await asyncio.sleep(
+                    0.8 * (attempt + 1)
+                )
+            else:
+                raise RuntimeError(
+                    "Gemini AI request failed. "
+                    + " | ".join(errors)
+                )
 
 
 async def run_ai_json(
